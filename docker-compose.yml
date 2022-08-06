@@ -1,0 +1,48 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:14.4-alpine
+    container_name: postgres
+    ports:
+      - '5436:5432'
+    volumes:
+      - ./pg-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: spa_dev
+    restart: always
+    healthcheck:
+      test: "pg_isready -U postgres -d spa_dev"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  migrate:
+    image: migrate/migrate:v4.15.2
+    container_name: migrations
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      db:
+          condition: service_healthy
+    command: ["-path", "/migrations",
+              "-database", "postgres://postgres:${PG_PASSWORD}@db:5432/spa_dev?sslmode=disable",
+              "up"]
+
+  app:
+    build: .
+    container_name: application
+    ports:
+      - '8080:8080'
+    environment:
+      PG_PASSWORD: ${PG_PASSWORD}
+      JWT_SIGNING_KEY: ${JWT_SIGNING_KEY}
+      HASHER_COST: ${HASHER_COST}
+    depends_on:
+      - db
+      - migrate
+
+volumes:
+  pg-data:

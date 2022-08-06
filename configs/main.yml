@@ -1,0 +1,23 @@
+server:
+  port: '8080'
+  shutdown_timeout: 1s
+
+static:
+  path: "static"
+  index: "index.html"
+
+postgres:
+  username:  'postgres'
+  host: 'db'
+  port: '5432'
+  database: 'spa_dev'
+  sslmode: 'disable'
+  conn_attempts: 20
+  conn_timeout: 1s
+  max_open_conns: 10
+
+logger:
+  level: 'debug'
+
+jwt:
+  token_ttl: 3h
